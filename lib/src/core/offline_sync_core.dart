@@ -1,64 +1,50 @@
 import '../storage/storage_adapter.dart';
 import '../cache/cache_entry.dart';
+import '../sync/sync_manager.dart';
+import '../sync/sync_task.dart';
+import '../utils/logger.dart';
+import 'config.dart';
 
-/// The core manager class for the Offline Sync package.
-///
-/// It handles the initialization of the underlying storage and coordinates
-/// caching requests with Time-to-Live (TTL) verification and fallback mechanisms.
 class OfflineSyncCore {
   static StorageAdapter? _storage;
+  static SyncManager? _syncManager;
+  static OfflineSyncConfig _config = const OfflineSyncConfig();
 
-  /// Initializes the [OfflineSyncCore] with a persistent storage mechanism.
-  ///
-  /// This must be called before calling [get].
-  ///
-  /// Example:
-  /// ```dart
-  /// await OfflineSyncCore.initialize(storage: HiveStorage());
-  /// ```
-  static Future<void> initialize({required StorageAdapter storage}) async {
+  static Future<void> initialize({
+    required StorageAdapter storage,
+    OfflineSyncConfig config = const OfflineSyncConfig(),
+  }) async {
+    _config = config;
     _storage = storage;
     await _storage!.initialize();
+    SyncLogger.configure(enabled: _config.enableLogging);
+    _syncManager = SyncManager();
+    await _syncManager!.initialize();
+    SyncLogger.instance.info('OfflineSyncCore initialized');
   }
 
-  /// Retrieves a value of type [T] associated with [key].
-  ///
-  /// First, it tries to fetch the data from the local storage cache. If the
-  /// cache exists and its age is within the specified [ttl] duration, the cached data is returned.
-  ///
-  /// If the cache is empty or expired, it calls the [fetch] function to get fresh
-  /// data, saves it to the cache, and returns it.
-  ///
-  /// If the network request [fetch] fails and the cache exists but is expired,
-  /// it will gracefully fall back and return the expired cache data instead of throwing an error.
-  ///
-  /// Throws [StateError] if [OfflineSyncCore] is not initialized.
   static Future<T?> get<T>({
     required String key,
     required Duration ttl,
     required Future<T> Function() fetch,
   }) async {
-    if (_storage == null) {
-      throw StateError(
-        'OfflineSyncCore has not been initialized. Call initialize() first.',
-      );
-    }
-
-    // 1. Try to get from storage cache
+    _assertInitialized();
     try {
       final cachedData = await _storage!.get(key);
       if (cachedData != null) {
         final entry = CacheEntry.fromJson(cachedData);
         if (!entry.isExpired) {
+          SyncLogger.instance.info('Cache hit: $key');
           return entry.data as T?;
         }
+        SyncLogger.instance.debug('Cache expired: $key');
       }
     } catch (e) {
-      // Log or handle cache read error silently, or proceed to fetch
+      SyncLogger.instance.warning('Cache read error for $key: $e');
     }
 
-    // 2. Fetch from remote/API if cache is empty or expired
     try {
+      SyncLogger.instance.info('Fetching from network: $key');
       final data = await fetch();
       if (data != null) {
         final entry = CacheEntry(
@@ -67,18 +53,51 @@ class OfflineSyncCore {
           expiresAt: DateTime.now().add(ttl),
         );
         await _storage!.put(key, entry.toJson());
+        SyncLogger.instance.info('Cache saved: $key');
       }
       return data;
     } catch (e) {
-      // Fallback: if fetching fails, try to return the expired cache
+      SyncLogger.instance.error('Network fetch failed for $key', e);
       try {
         final cachedData = await _storage!.get(key);
         if (cachedData != null) {
+          SyncLogger.instance.warning('Returning expired cache for $key');
           final entry = CacheEntry.fromJson(cachedData);
           return entry.data as T?;
         }
       } catch (_) {}
       rethrow;
+    }
+  }
+
+  static Future<void> enqueue(SyncTask task) async {
+    _assertInitialized();
+    await _syncManager!.enqueue(task);
+    SyncLogger.instance.info('Task enqueued: ${task.url}');
+  }
+
+  static Future<void> forceSync() async {
+    _assertInitialized();
+    await _syncManager!.processPendingTasks();
+  }
+
+  static Future<void> clearCache() async {
+    _assertInitialized();
+    await _storage!.clear();
+    SyncLogger.instance.info('Cache cleared');
+  }
+
+  static SyncManager get syncManager {
+    _assertInitialized();
+    return _syncManager!;
+  }
+
+  static OfflineSyncConfig get config => _config;
+
+  static void _assertInitialized() {
+    if (_storage == null || _syncManager == null) {
+      throw StateError(
+          'OfflineSyncCore is not initialized. Call initialize() first.');
     }
   }
 }

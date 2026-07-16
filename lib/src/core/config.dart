@@ -1,4 +1,13 @@
-/// Configuration settings for the offline synchronization process.
 class OfflineSyncConfig {
-  // TODO: Add configurations like custom network timeout, retry limits, etc.
+  final int maxRetries;
+  final bool enableLogging;
+  final bool backgroundSyncEnabled;
+  final Duration defaultTtl;
+
+  const OfflineSyncConfig({
+    this.maxRetries = 3,
+    this.enableLogging = false,
+    this.backgroundSyncEnabled = false,
+    this.defaultTtl = const Duration(minutes: 5),
+  });
 }
