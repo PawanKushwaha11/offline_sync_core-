@@ -60,7 +60,10 @@ class _HomePageState extends State<HomePage> {
 
         debugPrint('✅ API response received');
 
-        return {'name': 'Amarjeet', 'email': 'amarjeet@example.com'};
+        return {
+          'name': 'Pawan Kushwaha',
+          'email': 'pawan@example.com',
+        };
       },
     );
 

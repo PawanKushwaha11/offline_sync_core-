@@ -1,3 +1,15 @@
+## 0.1.3
+
+* Added GitHub and LinkedIn badges to the README footer.
+
+## 0.1.2
+
+* Updated developer profile name to Pawan Kushwaha and added dynamic GitHub profile image.
+
+## 0.1.1
+
+* Updated README.md roadmap checkboxes and directory tree statuses to reflect fully implemented v0.1.0 features.
+
 ## 0.1.0
 
 * Added `SyncTask` model with UUID generation, full JSON serialization, and `copyWith` support.

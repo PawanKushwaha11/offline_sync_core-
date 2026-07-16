@@ -141,17 +141,17 @@ lib/
     ├── storage/
     │   ├── storage_adapter.dart   ← Abstract interface
     │   ├── hive_storage.dart      ← Hive implementation ✅
-    │   └── sqlite_storage.dart    ← SQLite implementation 🔜
+    │   └── sqlite_storage.dart    ← SQLite implementation ✅
     │
     ├── sync/
-    │   ├── sync_manager.dart      ← Sync orchestration 🔜
-    │   ├── sync_queue.dart        ← Offline mutation queue 🔜
-    │   ├── sync_task.dart         ← Task model 🔜
+    │   ├── sync_manager.dart      ← Sync orchestration ✅
+    │   ├── sync_queue.dart        ← Offline mutation queue ✅
+    │   ├── sync_task.dart         ← Task model ✅
     │   └── sync_status.dart       ← Status enum
     │
     ├── inspector/
-    │   ├── inspector_controller.dart ← Debug controls 🔜
-    │   └── inspector_screen.dart     ← Debug UI overlay 🔜
+    │   ├── inspector_controller.dart ← Debug controls ✅
+    │   └── inspector_screen.dart     ← Debug UI overlay ✅
     │
     └── utils/
         ├── logger.dart            ← Internal logging
@@ -194,10 +194,10 @@ await OfflineSyncCore.initialize(storage: MyCustomStorage());
 - [x] Offline fallback to expired cache
 - [x] Hive storage adapter
 - [x] Abstract storage interface
-- [ ] Persistent offline sync queue
-- [ ] SQLite storage adapter
+- [x] Persistent offline sync queue
+- [x] SQLite storage adapter
 - [ ] Background auto-sync using WorkManager
-- [ ] Visual debug Inspector screen
+- [x] Visual debug Inspector screen
 - [ ] Conflict resolution strategy
 
 ---
@@ -224,7 +224,18 @@ This project is licensed under the **MIT License** — see the [LICENSE](LICENSE
 
 <div align="center">
 
-Made with ❤️ by [AmarJeet](https://github.com/AmarJeet)
+Made with ❤️ by Pawan Kushwaha
+
+<br/>
+
+<img src="assets/profile.jpeg" width="100" height="100" style="border-radius: 50%;" />
+
+<br/><br/>
+
+[![GitHub](https://img.shields.io/badge/GitHub-100000?style=for-the-badge&logo=github&logoColor=white)](https://github.com/PawanKushwaha11)
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-0077B5?style=for-the-badge&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/pawan8052/)
+
+<br/><br/>
 
 ⭐ **If this package helped you, please star the repo!** ⭐
 
