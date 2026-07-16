@@ -1,3 +1,11 @@
+## 0.1.5
+
+* Fixed README.md profile image to use an absolute GitHub Raw URL for proper rendering on pub.dev.
+
+## 0.1.4
+
+* Fixed issues badge and repository link in README.md to use the correct GitHub repository URL.
+
 ## 0.1.3
 
 * Added GitHub and LinkedIn badges to the README footer.

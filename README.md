@@ -12,7 +12,7 @@ A lightweight, extensible, and production-ready package for **offline-first cach
 [![License: MIT](https://img.shields.io/badge/License-MIT-purple.svg)](LICENSE)
 [![Flutter](https://img.shields.io/badge/Flutter-%3E%3D1.17.0-blue?logo=flutter)](https://flutter.dev)
 [![Dart](https://img.shields.io/badge/Dart-%5E3.10.4-0175C2?logo=dart)](https://dart.dev)
-[![Issues](https://img.shields.io/github/issues/AmarJeet/offline_sync_core)](https://github.com/AmarJeet/offline_sync_core/issues)
+[![Issues](https://img.shields.io/github/issues/PawanKushwaha11/offline_sync_core-)](https://github.com/PawanKushwaha11/offline_sync_core-/issues)
 
 <br/>
 
@@ -212,7 +212,7 @@ Contributions, issues and feature requests are welcome!
 4. Push to the branch: `git push origin feature/amazing-feature`
 5. Open a Pull Request
 
-Feel free to check the [issues page](https://github.com/AmarJeet/offline_sync_core/issues).
+Feel free to check the [issues page](https://github.com/PawanKushwaha11/offline_sync_core-/issues).
 
 ---
 
@@ -228,7 +228,7 @@ Made with ❤️ by Pawan Kushwaha
 
 <br/>
 
-<img src="assets/profile.jpeg" width="100" height="100" style="border-radius: 50%;" />
+<img src="https://raw.githubusercontent.com/PawanKushwaha11/offline_sync_core-/main/assets/profile.jpeg" width="100" height="100" style="border-radius: 50%;" />
 
 <br/><br/>
 
