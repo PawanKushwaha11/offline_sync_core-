@@ -1,8 +1,20 @@
 name: offline_sync_core
-description: A robust, lightweight, and extensible offline-first caching and synchronization package for Flutter using Hive.
-version: 0.1.5
+description: >-
+  A robust, production-ready Flutter package for offline-first caching and
+  synchronization. Features smart TTL cache, offline sync queue with auto-retry,
+  optimistic UI updates, periodic background sync, SQLite & Hive adapters, and
+  a built-in visual debug inspector.
+version: 0.1.6
 repository: https://github.com/PawanKushwaha11/offline_sync_core-
 issue_tracker: https://github.com/PawanKushwaha11/offline_sync_core-/issues
+homepage: https://pub.dev/packages/offline_sync_core
+
+topics:
+  - offline
+  - cache
+  - sync
+  - hive
+  - networking
 
 environment:
   sdk: ^3.10.4

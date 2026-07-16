@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:http/http.dart' as http;
@@ -11,6 +12,8 @@ class SyncManager {
   final BehaviorSubject<SyncStatus> _statusController =
       BehaviorSubject<SyncStatus>.seeded(SyncStatus.pending);
 
+  Timer? _periodicTimer;
+
   Stream<SyncStatus> get syncStream => _statusController.stream;
   SyncStatus get currentStatus => _statusController.value;
 
@@ -23,6 +26,21 @@ class SyncManager {
         processPendingTasks();
       }
     });
+  }
+
+  void startPeriodicSync({Duration interval = const Duration(minutes: 5)}) {
+    _periodicTimer?.cancel();
+    _periodicTimer = Timer.periodic(interval, (_) async {
+      final connectivity = await Connectivity().checkConnectivity();
+      if (connectivity.any((r) => r != ConnectivityResult.none)) {
+        await processPendingTasks();
+      }
+    });
+  }
+
+  void stopPeriodicSync() {
+    _periodicTimer?.cancel();
+    _periodicTimer = null;
   }
 
   Future<void> enqueue(SyncTask task) async {
@@ -76,16 +94,13 @@ class SyncManager {
     http.Response response;
     switch (task.method.toUpperCase()) {
       case 'POST':
-        response =
-            await http.post(uri, headers: headers, body: encodedBody);
+        response = await http.post(uri, headers: headers, body: encodedBody);
         break;
       case 'PUT':
-        response =
-            await http.put(uri, headers: headers, body: encodedBody);
+        response = await http.put(uri, headers: headers, body: encodedBody);
         break;
       case 'PATCH':
-        response =
-            await http.patch(uri, headers: headers, body: encodedBody);
+        response = await http.patch(uri, headers: headers, body: encodedBody);
         break;
       case 'DELETE':
         response = await http.delete(uri, headers: headers);
@@ -103,6 +118,7 @@ class SyncManager {
   }
 
   void dispose() {
+    _periodicTimer?.cancel();
     _statusController.close();
   }
 }

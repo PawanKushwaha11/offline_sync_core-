@@ -4,7 +4,7 @@
 
 ### Build Flutter apps that work **seamlessly offline**.
 
-A lightweight, extensible, and production-ready package for **offline-first caching & synchronization** — featuring smart TTL-based cache management, automatic offline fallback, and pluggable storage backends.
+A lightweight, extensible, and production-ready package for **offline-first caching & synchronization** — featuring smart TTL-based cache management, automatic offline fallback, persistent sync queue, and a visual debug inspector.
 
 <br/>
 
@@ -22,7 +22,7 @@ A lightweight, extensible, and production-ready package for **offline-first cach
 
 ## ✨ Why offline_sync_core?
 
-Most Flutter apps break when the internet goes down. `offline_sync_core` ensures your app **never fails** — it intelligently serves cached data while your network is offline, and automatically syncs when it comes back.
+Most Flutter apps break when the internet goes down. `offline_sync_core` ensures your app **never fails** — it intelligently serves cached data while your network is offline, queues mutations locally, and automatically syncs everything when connectivity is restored.
 
 ---
 
@@ -30,12 +30,16 @@ Most Flutter apps break when the internet goes down. `offline_sync_core` ensures
 
 | Feature | Description |
 |---|---|
-| ⚡ **Smart Cache** | Serves cached data instantly, fetches fresh data in the background |
-| ⏳ **TTL Support** | Set custom expiry duration per cache entry |
+| ⚡ **Smart Cache** | Serves cached data instantly with TTL-based expiry |
 | 🛡 **Offline Fallback** | Falls back to expired cache when network fails — no crash, no blank screen |
+| 📤 **Offline Sync Queue** | Queue POST/PUT/DELETE mutations locally when offline, auto-sync on reconnect |
+| ✏️ **Optimistic Updates** | Update local cache instantly (`put`) and queue background sync separately |
+| 🔄 **Periodic Sync** | Auto-sync pending queue at a configurable interval |
 | 🗄 **Hive Storage** | Blazing-fast local key-value persistence out of the box |
+| 🗃 **SQLite Storage** | Full relational storage adapter using `sqflite` |
 | 🔌 **Pluggable Backend** | Swap storage engines easily by implementing `StorageAdapter` |
-| 📐 **Extensible Architecture** | Built with clean abstractions — ready to scale with Sync Queue, SQLite, and Inspector |
+| 🔍 **Visual Inspector** | Built-in debug UI to inspect cache, queue, and network status |
+| 📋 **Configurable Logging** | Structured internal logging with `SyncLogger` |
 
 ---
 
@@ -45,7 +49,7 @@ Add the package to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  offline_sync_core: ^0.0.1
+  offline_sync_core: ^0.1.6
 ```
 
 Then run:
@@ -69,7 +73,14 @@ void main() async {
 
   await OfflineSyncCore.initialize(
     storage: HiveStorage(),
+    config: const OfflineSyncConfig(
+      enableLogging: true,
+      maxRetries: 3,
+    ),
   );
+
+  // Optional: auto-sync every 5 minutes when internet is available
+  OfflineSyncCore.startPeriodicSync(interval: const Duration(minutes: 5));
 
   runApp(const MyApp());
 }
@@ -79,24 +90,20 @@ void main() async {
 
 ## 💻 Usage
 
-### Fetch & Cache Data (Smart Cache with TTL)
+### 1. Fetch & Cache Data (Smart Cache with TTL)
 
 ```dart
 final user = await OfflineSyncCore.get<Map>(
   key: 'user_profile',
   ttl: const Duration(minutes: 5),
   fetch: () async {
-    // Your remote API call here
-    final response = await http.get(
-      Uri.parse('https://api.example.com/profile'),
-    );
+    final response = await http.get(Uri.parse('https://api.example.com/profile'));
     return jsonDecode(response.body);
   },
 );
 ```
 
-### How it works:
-
+**How it works:**
 ```
 App calls get()
       │
@@ -122,6 +129,75 @@ App calls get()
 
 ---
 
+### 2. Optimistic Update (Update UI instantly, sync in background)
+
+```dart
+// 1. Update local cache immediately — UI changes instantly (even offline)
+await OfflineSyncCore.put(
+  key: 'user_profile',
+  data: {'name': 'Shivam', 'email': 'shivam@example.com'},
+  ttl: const Duration(minutes: 5),
+);
+
+// 2. Queue background sync to update the server
+await OfflineSyncCore.enqueue(SyncTask(
+  url: 'https://api.example.com/users/1',
+  method: 'PUT',
+  body: {'name': 'Shivam', 'email': 'shivam@example.com'},
+));
+```
+
+---
+
+### 3. Offline Sync Queue (Queue mutations when offline)
+
+```dart
+// Queue a POST request — safe even without internet
+await OfflineSyncCore.enqueue(SyncTask(
+  url: 'https://api.example.com/posts',
+  method: 'POST',
+  body: {'title': 'New Post', 'body': 'Created offline'},
+));
+
+// When internet restores, SyncManager auto-syncs all pending tasks.
+// You can also force sync manually:
+await OfflineSyncCore.forceSync();
+```
+
+---
+
+### 4. Periodic Sync (Timer-based background sync)
+
+```dart
+// Start syncing pending queue every 10 minutes
+OfflineSyncCore.startPeriodicSync(
+  interval: const Duration(minutes: 10),
+);
+
+// Stop when no longer needed (e.g., on app pause)
+OfflineSyncCore.stopPeriodicSync();
+```
+
+---
+
+### 5. Visual Debug Inspector
+
+```dart
+Navigator.push(
+  context,
+  MaterialPageRoute(
+    builder: (_) => InspectorScreen(
+      controller: InspectorController(
+        storage: HiveStorage(),
+        syncManager: OfflineSyncCore.syncManager,
+      ),
+    ),
+  ),
+);
+```
+
+---
+
 ## 🏗 Architecture
 
 ```
@@ -130,8 +206,8 @@ lib/
 │
 └── src/
     ├── core/
-    │   ├── offline_sync_core.dart ← Main engine (initialize + get)
-    │   └── config.dart            ← Configuration model
+    │   ├── offline_sync_core.dart ← Main engine (get, put, enqueue, sync)
+    │   └── config.dart            ← OfflineSyncConfig model
     │
     ├── cache/
     │   ├── cache_manager.dart     ← Cache CRUD operations
@@ -144,17 +220,17 @@ lib/
     │   └── sqlite_storage.dart    ← SQLite implementation ✅
     │
     ├── sync/
-    │   ├── sync_manager.dart      ← Sync orchestration ✅
-    │   ├── sync_queue.dart        ← Offline mutation queue ✅
-    │   ├── sync_task.dart         ← Task model ✅
-    │   └── sync_status.dart       ← Status enum
+    │   ├── sync_manager.dart      ← Connectivity listener, periodic sync ✅
+    │   ├── sync_queue.dart        ← Hive-backed offline queue ✅
+    │   ├── sync_task.dart         ← Task model with retry support ✅
+    │   └── sync_status.dart       ← Status enum (pending/syncing/success/failed)
     │
     ├── inspector/
     │   ├── inspector_controller.dart ← Debug controls ✅
     │   └── inspector_screen.dart     ← Debug UI overlay ✅
     │
     └── utils/
-        ├── logger.dart            ← Internal logging
+        ├── logger.dart            ← SyncLogger singleton
         └── extensions.dart        ← Dart extensions
 ```
 
@@ -196,8 +272,10 @@ await OfflineSyncCore.initialize(storage: MyCustomStorage());
 - [x] Abstract storage interface
 - [x] Persistent offline sync queue
 - [x] SQLite storage adapter
-- [ ] Background auto-sync using WorkManager
 - [x] Visual debug Inspector screen
+- [x] Optimistic UI update via `put()`
+- [x] Periodic sync with configurable interval
+- [ ] Background auto-sync using WorkManager
 - [ ] Conflict resolution strategy
 
 ---

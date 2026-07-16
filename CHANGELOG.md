@@ -1,3 +1,10 @@
+## 0.1.6
+
+* Added `startPeriodicSync({Duration interval})` to `SyncManager` and `OfflineSyncCore` — automatically syncs pending queue at a fixed interval when internet is available.
+* Added `stopPeriodicSync()` to cancel scheduled sync.
+* Added `put<T>()` static method to `OfflineSyncCore` for manual/optimistic local cache updates.
+* Updated example app to demonstrate Optimistic UI Update pattern.
+
 ## 0.1.5
 
 * Fixed README.md profile image to use an absolute GitHub Raw URL for proper rendering on pub.dev.

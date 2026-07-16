@@ -70,6 +70,21 @@ class OfflineSyncCore {
     }
   }
 
+  static Future<void> put<T>({
+    required String key,
+    required T data,
+    required Duration ttl,
+  }) async {
+    _assertInitialized();
+    final entry = CacheEntry(
+      data: data,
+      createdAt: DateTime.now(),
+      expiresAt: DateTime.now().add(ttl),
+    );
+    await _storage!.put(key, entry.toJson());
+    SyncLogger.instance.info('Cache manually updated: $key');
+  }
+
   static Future<void> enqueue(SyncTask task) async {
     _assertInitialized();
     await _syncManager!.enqueue(task);
@@ -79,6 +94,18 @@ class OfflineSyncCore {
   static Future<void> forceSync() async {
     _assertInitialized();
     await _syncManager!.processPendingTasks();
+  }
+
+  static void startPeriodicSync({
+    Duration interval = const Duration(minutes: 5),
+  }) {
+    _assertInitialized();
+    _syncManager!.startPeriodicSync(interval: interval);
+  }
+
+  static void stopPeriodicSync() {
+    _assertInitialized();
+    _syncManager!.stopPeriodicSync();
   }
 
   static Future<void> clearCache() async {
